@@ -1,0 +1,17 @@
+entities:
+  SECRET_KEY: local_only
+  API_KEY: local_only
+  JWT: redact
+  WALLET: redact
+  EMAIL: redact
+  PHONE: redact
+
+sensitivity_thresholds:
+  high: 0.7
+
+localProviders:
+  - Ollama
+  - LMStudio
+  - 5ire
+
+defaultProviders: []
