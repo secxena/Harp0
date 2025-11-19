@@ -144,6 +144,9 @@ const electronHandler = {
       return ipcRenderer.invoke('hmac-sha256-hex', data, key);
     },
   },
+  privacy: {
+    getPolicy: () => ipcRenderer.invoke('get-privacy-policy'),
+  },
   openExternal(url: string) {
     return ipcRenderer.invoke('open-external', url);
   },

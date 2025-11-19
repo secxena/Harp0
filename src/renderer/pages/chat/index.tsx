@@ -472,6 +472,10 @@ ${prompt}
       }
 
       const onChatComplete = async (result: IChatResponseMessage) => {
+        const privacyMemo = result.privacy
+          ? JSON.stringify({ privacy: result.privacy })
+          : undefined;
+
         /**
          * 异常分两种情况，一种是有输出， 但没有正常结束； 一种是没有输出
          * 异常且没有输出，则只更新 isActive 为 0
@@ -484,6 +488,7 @@ ${prompt}
           await updateMessage({
             id: msg.id,
             isActive: 0,
+            ...(privacyMemo ? { memo: privacyMemo } : {}),
           });
         } else {
           let { inputTokens } = result;
@@ -578,6 +583,7 @@ ${prompt}
                 id: k.id,
               })),
             ),
+            ...(privacyMemo ? { memo: privacyMemo } : {}),
           });
           useUsageStore.getState().create({
             provider: providerCtx.name,

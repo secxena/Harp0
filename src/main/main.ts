@@ -24,7 +24,6 @@ import { HttpsProxyAgent } from 'https-proxy-agent';
 import { IMCPServer } from 'types/mcp';
 import { isValidMCPServer, isValidMCPServerKey } from 'utils/validators';
 import { ThemeType } from 'types/appearance';
-import * as logging from './logging';
 import axiom from '../vendors/axiom';
 import {
   decodeBase64,
@@ -49,6 +48,7 @@ import {
 
 import { loadDocumentFromBuffer } from './docloader';
 import { DocumentLoader } from './next/document-loader/DocumentLoader';
+import * as logging from './logging';
 
 dotenv.config({
   path: app.isPackaged
@@ -86,6 +86,50 @@ const titleBarColor = {
     symbolColor: 'white',
   },
 };
+
+function parsePrivacyPolicy(filePath: string): any | null {
+  try {
+    const content = fs.readFileSync(filePath, 'utf8');
+    if (filePath.endsWith('.json')) {
+      return JSON.parse(content);
+    }
+    if (filePath.endsWith('.yaml') || filePath.endsWith('.yml')) {
+      try {
+        // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
+        const yaml = require('yaml');
+        return yaml.parse(content);
+      } catch (err: any) {
+        logging.captureException(err);
+        return null;
+      }
+    }
+  } catch (err: any) {
+    logging.captureException(err);
+  }
+  return null;
+}
+
+function loadPrivacyPolicyConfig(): any | null {
+  const searchPaths = [
+    path.join(app.getPath('userData'), 'privacy-policy.yaml'),
+    path.join(app.getPath('userData'), 'privacy-policy.json'),
+    path.join(app.getAppPath(), 'config', 'privacy-policy.yaml'),
+    path.join(app.getAppPath(), 'config', 'privacy-policy.json'),
+    path.join(app.getAppPath(), 'config', 'privacy-policy.example.yaml'),
+  ];
+
+  for (let i = 0; i < searchPaths.length; i += 1) {
+    const filePath = searchPaths[i];
+    if (fs.existsSync(filePath)) {
+      const parsed = parsePrivacyPolicy(filePath);
+      if (parsed) {
+        return parsed;
+      }
+    }
+  }
+
+  return null;
+}
 
 class AppUpdater {
   constructor() {
@@ -334,14 +378,6 @@ if (!gotTheLock) {
         process.stdin.destroy();
       });
 
-      app.on(
-        'certificate-error',
-        (event, _webContents, _url, _error, _certificate, callback) => {
-          // 允许私有证书
-          event.preventDefault();
-          callback(true);
-        },
-      );
       axiom.ingest([{ app: 'launch' }]);
     })
     .catch(logging.captureException);
@@ -359,6 +395,14 @@ ipcMain.on('install-tool-listener-ready', () => {
 });
 
 const activeRequests = new Map<string, AbortController>();
+
+app.on(
+  'certificate-error',
+  (event, _webContents, _url, _error, _certificate, callback) => {
+    event.preventDefault();
+    callback(true);
+  },
+);
 
 ipcMain.handle('request', async (event, options) => {
   const { url, method, headers, body, proxy, isStream } = options;
@@ -528,6 +572,10 @@ ipcMain.handle('hmac-sha256-hex', (_, data: string, key: string) => {
 
 ipcMain.handle('get-app-version', () => {
   return app.getVersion();
+});
+
+ipcMain.handle('get-privacy-policy', () => {
+  return loadPrivacyPolicyConfig();
 });
 
 ipcMain.handle('ingest-event', (_, data) => {

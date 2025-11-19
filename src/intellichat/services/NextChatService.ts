@@ -17,6 +17,12 @@ import MCPServerApprovalPolicyDialog from 'renderer/components/MCPServerApproval
 import useInspectorStore from 'stores/useInspectorStore';
 import useMCPStore from 'stores/useMCPStore';
 import { raiseError, stripHtmlTags } from 'utils/util';
+import {
+  detectLeaks,
+  evaluatePolicy,
+  redactText,
+} from 'privacy/privacy-router';
+import { loadPolicyRules } from 'privacy/policy-engine/loader';
 
 const debug = Debug('5ire:intellichat:NextChatService');
 
@@ -289,9 +295,83 @@ export default abstract class NextCharService {
     let reply = '';
     let reasoning = '';
     let signal: any = null;
+    let privacyMeta:
+      | {
+          detection: any;
+          policy: any;
+          redaction: any;
+          providerUsed?: string;
+        }
+      | undefined;
     try {
       signal = this.abortController.signal;
-      const response = await this.makeRequest(messages, msgId);
+
+      const basePromptMessage = messages.find(
+        (m) => m.role === 'user' && typeof m.content === 'string',
+      );
+      let finalMessages = messages;
+      if (basePromptMessage && typeof basePromptMessage.content === 'string') {
+        const provider = this.context.getProvider();
+        const rules = await loadPolicyRules();
+        const detection = detectLeaks(basePromptMessage.content);
+        const policy = evaluatePolicy(
+          detection,
+          {
+            providerName: provider.name,
+            modelName: this.getModelName(),
+            stream: this.context.isStream(),
+          },
+          rules,
+        );
+
+        if (policy.block) {
+          const policyError = new Error('Request blocked by privacy policy');
+          this.onErrorCallback(policyError, false);
+          await this.onCompleteCallback({
+            content: reply,
+            reasoning,
+            inputTokens: this.inputTokens,
+            outputTokens: this.outputTokens,
+            error: {
+              code: 400,
+              message: policyError.message,
+            },
+            privacy: {
+              detection,
+              policy,
+              redaction: {
+                redactedText: basePromptMessage.content,
+                mapping: [],
+              },
+              providerUsed: provider.name,
+            },
+          });
+          this.inputTokens = 0;
+          this.outputTokens = 0;
+          return;
+        }
+
+        const redaction = redactText(
+          basePromptMessage.content,
+          detection,
+          policy.redactions,
+        );
+        privacyMeta = {
+          detection,
+          policy,
+          redaction,
+          providerUsed: provider.name,
+        };
+
+        finalMessages = messages.map((msg) => {
+          if (msg === basePromptMessage) {
+            return { ...msg, content: redaction.redactedText };
+          }
+          return msg;
+        });
+      }
+
+      const response = await this.makeRequest(finalMessages, msgId);
       debug(
         `${this.name} Start Reading:`,
         response.status,
@@ -479,6 +559,7 @@ export default abstract class NextCharService {
           reasoning,
           inputTokens: this.inputTokens,
           outputTokens: this.outputTokens,
+          privacy: privacyMeta,
         });
         this.inputTokens = 0;
         this.outputTokens = 0;
@@ -495,6 +576,7 @@ export default abstract class NextCharService {
           code: error.code || 500,
           message: error.message || error.toString(),
         },
+        privacy: privacyMeta,
       });
       this.inputTokens = 0;
       this.outputTokens = 0;

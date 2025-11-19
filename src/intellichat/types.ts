@@ -67,6 +67,12 @@ export interface IChatResponseMessage {
     type?: string;
     message: string;
   };
+  privacy?: {
+    detection: any;
+    policy: any;
+    redaction: any;
+    providerUsed?: string;
+  };
 }
 
 export interface IMCPTool {
