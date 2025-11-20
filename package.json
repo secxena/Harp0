@@ -15,12 +15,12 @@
     "build": "concurrently \"npm run build:main\" \"npm run build:renderer\"",
     "build:main": "cross-env NODE_ENV=production webpack --config ./.erb/configs/webpack.config.main.prod.ts",
     "build:renderer": "cross-env NODE_ENV=production  webpack --config ./.erb/configs/webpack.config.renderer.prod.ts",
-    "postinstall": "tsx .erb/scripts/check-native-dep.js && electron-builder install-app-deps && cross-env NODE_ENV=development webpack --config ./.erb/configs/webpack.config.renderer.dev.dll.ts",
+    "postinstall": "node --import tsx .erb/scripts/check-native-dep.js && electron-builder install-app-deps && cross-env NODE_ENV=development webpack --config ./.erb/configs/webpack.config.renderer.dev.dll.ts",
     "lint": "cross-env NODE_ENV=development eslint . --ext .js,.jsx,.ts,.tsx",
-    "package": "tsx ./.erb/scripts/clean.js dist && npm run build && electron-builder build --publish never",
+    "package": "node --import tsx ./.erb/scripts/clean.js dist && npm run build && electron-builder build --publish never",
     "electron:build": "electron-builder build --publish never",
     "rebuild": "electron-rebuild --parallel --types prod,dev,optional --module-dir release/app",
-    "start": "tsx ./.erb/scripts/check-port-in-use.js && npm run start:renderer",
+    "start": "node ./.erb/scripts/start-dev.cjs",
     "start:main": "cross-env NODE_ENV=development DEBUG=5ire:* NODE_OPTIONS=\"--import tsx\" electronmon .",
     "start:preload": "cross-env NODE_ENV=development DEBUG=5ire:* webpack --config ./.erb/configs/webpack.config.preload.dev.ts",
     "start:renderer": "cross-env NODE_ENV=development DEBUG=5ire:* webpack serve --config ./.erb/configs/webpack.config.renderer.dev.ts",
@@ -66,6 +66,9 @@
     },
     "setupFiles": [
       "./.erb/scripts/check-build-exists.ts"
+    ],
+    "modulePathIgnorePatterns": [
+      "<rootDir>/release/app"
     ],
     "testEnvironment": "node",
     "testEnvironmentOptions": {

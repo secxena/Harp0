@@ -239,6 +239,8 @@ Implementation:
 
 * Later: optionally integrate an ML model (spaCy/transformers) for NER if time permits.
 
+> **Status:** Implemented weighted regex detectors for email, phone, IP, credit cards, API tokens, wallets, mnemonics, etc., with severity/confidence metadata plus Jest coverage (`test/privacy/leak-detector.test.ts`).
+
 ---
 
 ### 5.3 Policy Engine
