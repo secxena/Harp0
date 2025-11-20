@@ -20,6 +20,7 @@ export interface PolicyRules {
   localProviders?: string[];
   defaultProviders?: string[];
   custom_literals?: string[];
+  disabled_entities?: DetectedEntityType[];
 }
 
 const defaultRules: PolicyRules = {
@@ -44,6 +45,7 @@ const defaultRules: PolicyRules = {
   localProviders: ['Ollama', 'LMStudio', '5ire'],
   defaultProviders: [],
   custom_literals: [],
+  disabled_entities: [],
 };
 
 /**

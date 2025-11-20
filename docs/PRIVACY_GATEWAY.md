@@ -274,6 +274,8 @@ Implementation:
 
 > **Status:** Users can edit routing, thresholds, and a custom literal-redaction list via the new privacy button in the chat header; settings persist to `privacy-policy.yaml` and invalidate the runtime cache automatically.
 
+> **New:** The privacy settings drawer also exposes checkboxes for every detector (email, credit card, wallet, etc.), letting judges disable/enable regex families without digging into config files.
+
 ---
 
 ### 5.4 Redaction & Mapping

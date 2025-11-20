@@ -1,5 +1,6 @@
 import {
   Button,
+  Checkbox,
   Divider,
   Drawer,
   DrawerBody,
@@ -14,6 +15,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { resetPolicyCache } from 'privacy/policy-engine/loader';
 import useToast from 'hooks/useToast';
+import { detectorMetadata } from 'privacy/leak-detector';
 
 /* eslint-disable @typescript-eslint/no-unused-vars, no-unused-vars */
 interface PrivacyConfigDrawerProps {
@@ -43,6 +45,7 @@ export default function PrivacyConfigDrawer({
   const [customLiterals, setCustomLiterals] = useState('');
   const [sensitivityHigh, setSensitivityHigh] = useState<string>('0.7');
   const [rawPolicy, setRawPolicy] = useState<any>({});
+  const [disabledEntities, setDisabledEntities] = useState<string[]>([]);
 
   useEffect(() => {
     if (!open) {
@@ -59,6 +62,7 @@ export default function PrivacyConfigDrawer({
         setCustomLiterals(
           listToText(rules.custom_literals || rules.customLiterals),
         );
+        setDisabledEntities(rules.disabled_entities || []);
         setSensitivityHigh(
           String(
             rules?.sensitivity_thresholds?.high ??
@@ -77,6 +81,15 @@ export default function PrivacyConfigDrawer({
 
   const canSave = useMemo(() => !saving && !loading, [saving, loading]);
 
+  const handleToggleEntity = (type: string, checked: boolean) => {
+    setDisabledEntities((prev) => {
+      if (checked) {
+        return [...new Set([...prev, type])];
+      }
+      return prev.filter((item) => item !== type);
+    });
+  };
+
   const onSave = async () => {
     try {
       setSaving(true);
@@ -90,6 +103,7 @@ export default function PrivacyConfigDrawer({
         localProviders: textToList(localProviders),
         custom_literals: textToList(customLiterals),
         sensitivity_thresholds: thresholds,
+        disabled_entities: disabledEntities,
       };
       await window.electron.privacy.setPolicy(nextPolicy);
       resetPolicyCache();
@@ -165,6 +179,26 @@ export default function PrivacyConfigDrawer({
             value={sensitivityHigh}
             onChange={(_, data) => setSensitivityHigh(data.value)}
           />
+        </Field>
+        <Divider>{t('Privacy.Detectors', 'Leak detectors')}</Divider>
+        <Field
+          label={t(
+            'Privacy.DisableDetectors',
+            'Disable specific detectors (checked = disabled)',
+          )}
+        >
+          <div className="grid gap-2 max-h-60 overflow-auto pr-2">
+            {detectorMetadata.map((meta) => (
+              <Checkbox
+                key={meta.type}
+                label={`${meta.type} – ${meta.description}`}
+                checked={disabledEntities.includes(meta.type)}
+                onChange={(_, data) =>
+                  handleToggleEntity(meta.type, !!data.checked)
+                }
+              />
+            ))}
+          </div>
         </Field>
         <Divider>
           {t('Privacy.CustomRedactions', 'Custom literals to redact')}

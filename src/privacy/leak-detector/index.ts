@@ -47,6 +47,12 @@ const HIGH_CONFIDENCE = 0.9;
 const MEDIUM_CONFIDENCE = 0.65;
 const LOW_CONFIDENCE = 0.35;
 
+export interface DetectorMetadata {
+  type: DetectedEntityType;
+  label: string;
+  description: string;
+}
+
 const detectors: DetectorRule[] = [
   {
     type: 'EMAIL',
@@ -155,6 +161,12 @@ const detectors: DetectorRule[] = [
 
 const sortedDetectors = [...detectors].sort((a, b) => b.weight - a.weight);
 const MAX_WEIGHT = sortedDetectors.reduce((sum, rule) => sum + rule.weight, 0);
+
+export const detectorMetadata: DetectorMetadata[] = detectors.map((rule) => ({
+  type: rule.type,
+  label: `${rule.type}`,
+  description: rule.description,
+}));
 
 function clamp(val: number, min: number, max: number) {
   return Math.max(min, Math.min(max, val));

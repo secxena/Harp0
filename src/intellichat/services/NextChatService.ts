@@ -371,6 +371,11 @@ export default abstract class NextCharService {
             detection.entities.push(...literals);
           }
         }
+        if (rules.disabled_entities?.length) {
+          detection.entities = detection.entities.filter(
+            (entity) => !rules.disabled_entities?.includes(entity.type),
+          );
+        }
         const policy = evaluatePolicy(
           detection,
           {
