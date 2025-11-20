@@ -55,14 +55,6 @@ const detectors: DetectorRule[] = [
     pattern: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?!\w)/g,
   },
   {
-    type: 'PHONE',
-    description: 'Phone number',
-    severity: 'low',
-    weight: 0.2,
-    pattern:
-      /\b(?:\+?\d{1,3}[ .-]?)?(?:\(?\d{2,4}\)?[ .-]?)?\d{3,4}[ .-]?\d{4}\b/g,
-  },
-  {
     type: 'ADDRESS',
     description: 'Street address',
     severity: 'medium',
@@ -150,9 +142,18 @@ const detectors: DetectorRule[] = [
     weight: 0.4,
     pattern: /\b(password|passwd|pwd)\s*[:=]\s*["']?[^\s"']{6,}["']?/gi,
   },
+  {
+    type: 'PHONE',
+    description: 'Phone number',
+    severity: 'low',
+    weight: 0.15,
+    pattern:
+      /\b(?:\+?\d{1,3}[ .-]?)?(?:\(?\d{2,4}\)?[ .-]?)?\d{3,4}[ .-]?\d{4}\b/g,
+  },
 ];
 
-const MAX_WEIGHT = detectors.reduce((sum, rule) => sum + rule.weight, 0);
+const sortedDetectors = [...detectors].sort((a, b) => b.weight - a.weight);
+const MAX_WEIGHT = sortedDetectors.reduce((sum, rule) => sum + rule.weight, 0);
 
 function clamp(val: number, min: number, max: number) {
   return Math.max(min, Math.min(max, val));
@@ -193,11 +194,22 @@ function luhnCheck(raw: string): boolean {
 /**
  * Enhanced regex-based leak detector with weighted scoring.
  */
+function hasOverlap(
+  ranges: { start: number; end: number }[],
+  start: number,
+  end: number,
+) {
+  return ranges.some(
+    (range) => Math.max(range.start, start) < Math.min(range.end, end),
+  );
+}
+
 export function detectLeaks(text: string): DetectionResult {
   const entities: DetectedEntity[] = [];
   let totalWeight = 0;
+  const occupiedRanges: { start: number; end: number }[] = [];
 
-  detectors.forEach((rule) => {
+  sortedDetectors.forEach((rule) => {
     const patterns = rule.patterns || (rule.pattern ? [rule.pattern] : []);
     patterns.forEach((pattern) => {
       Array.from(text.matchAll(pattern)).forEach((match) => {
@@ -205,16 +217,22 @@ export function detectLeaks(text: string): DetectionResult {
         if (rule.validate && !rule.validate(value)) {
           return;
         }
+        const start = match.index ?? 0;
+        const end = start + value.length;
+        if (hasOverlap(occupiedRanges, start, end)) {
+          return;
+        }
         entities.push({
           type: rule.type,
-          start: match.index ?? 0,
-          end: (match.index ?? 0) + value.length,
+          start,
+          end,
           text: value,
           severity: rule.severity,
           confidence: confidenceForSeverity(rule.severity),
           description: rule.description,
         });
         totalWeight += rule.weight;
+        occupiedRanges.push({ start, end });
       });
     });
   });

@@ -38,4 +38,12 @@ MIIBVgIBADANBgkqhkiG9w0BAQEFAASCAT8wggE7AgEAAkEAz1
     const result = detectLeaks(text);
     expect(result.entities.find((e) => e.type === 'PRIVATE_KEY')).toBeTruthy();
   });
+
+  it('prefers credit card over phone for overlapping digits', () => {
+    const text = 'number 4242 4242 4242 4242 please secure';
+    const result = detectLeaks(text);
+    const types = result.entities.map((e) => e.type);
+    expect(types).toContain('CREDIT_CARD');
+    expect(types).not.toContain('PHONE');
+  });
 });

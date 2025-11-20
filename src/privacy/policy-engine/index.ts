@@ -25,10 +25,16 @@ const defaultRules: PolicyRules = {
   entities: {
     SECRET_KEY: 'local_only',
     API_KEY: 'local_only',
+    ACCESS_TOKEN: 'local_only',
+    PRIVATE_KEY: 'local_only',
+    CREDIT_CARD: 'local_only',
+    SSN: 'local_only',
+    MNEMONIC: 'local_only',
     WALLET: 'redact',
     JWT: 'redact',
     EMAIL: 'redact',
     PHONE: 'redact',
+    PASSWORD: 'redact',
   },
   sensitivity_thresholds: {
     high: 0.7,
