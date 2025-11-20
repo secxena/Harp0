@@ -23,7 +23,6 @@ import {
   ChevronDown16Regular,
   ChevronUp16Regular,
   Dismiss24Regular,
-  ShieldLock24Regular,
 } from '@fluentui/react-icons';
 import useECharts from 'hooks/useECharts';
 import { debounce } from 'lodash';
@@ -85,8 +84,6 @@ export default function Message({
   );
 
   const { render } = useMarkdown();
-  const { privacy } = message;
-
   const onCitationClick = useCallback(
     (event: any) => {
       try {
@@ -127,28 +124,6 @@ export default function Message({
   const toggleThink = useCallback(() => {
     setIsReasoningShow(!isReasoningShow);
   }, [isReasoningShow]);
-
-  const topPrivacyEntities = useMemo(() => {
-    if (!privacy?.detection?.entities) {
-      return [];
-    }
-    return privacy.detection.entities.slice(0, 5);
-  }, [privacy]);
-
-  const redactionMappings = useMemo(() => {
-    return privacy?.redaction?.mapping || [];
-  }, [privacy]);
-
-  const allowedProviders = useMemo(() => {
-    return privacy?.policy?.allowedProviders || [];
-  }, [privacy]);
-
-  const sensitivityDisplay = useMemo(() => {
-    if (!privacy?.detection) {
-      return null;
-    }
-    return `${Math.round((privacy.detection.sensitivity || 0) * 100)}% sensitivity`;
-  }, [privacy]);
 
   const debouncedSetDeferredReply = useMemo(
     () => debounce((replyData: string) => setDeferredReply(replyData), 50),
@@ -450,85 +425,6 @@ export default function Message({
                 </li>
               ))}
             </ul>
-          </div>
-        )}
-        {privacy && (
-          <div className="message-privacy mt-4">
-            <Dialog>
-              <DialogTrigger>
-                <Button
-                  appearance="outline"
-                  size="small"
-                  icon={<ShieldLock24Regular />}
-                  title="Privacy details"
-                >
-                  Privacy details
-                </Button>
-              </DialogTrigger>
-              <DialogSurface>
-                <DialogBody>
-                  <DialogTitle
-                    action={
-                      <DialogTrigger action="close">
-                        <Button
-                          appearance="subtle"
-                          aria-label="close"
-                          icon={<Dismiss24Regular />}
-                        />
-                      </DialogTrigger>
-                    }
-                  >
-                    Privacy details
-                  </DialogTitle>
-                  <DialogContent>
-                    <div className="text-sm space-y-2">
-                      <p>
-                        <strong>Provider used:</strong>{' '}
-                        {privacy.providerUsed || 'Not routed'}
-                      </p>
-                      <p>
-                        <strong>Sensitivity score:</strong>{' '}
-                        {sensitivityDisplay || 'N/A'}
-                      </p>
-                      <p>
-                        <strong>Allowed providers:</strong>{' '}
-                        {allowedProviders.length
-                          ? allowedProviders.join(', ')
-                          : 'None'}
-                      </p>
-                      <div>
-                        <strong>Detected entities:</strong>
-                        <ul className="ml-4 list-disc">
-                          {topPrivacyEntities.length === 0 && <li>None</li>}
-                          {topPrivacyEntities.map((entity) => (
-                            <li
-                              key={`${entity.type}-${entity.start}-${entity.text}`}
-                            >
-                              {entity.type}: <code>{entity.text}</code>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                      <div>
-                        <strong>Redactions:</strong>
-                        <ul className="ml-4 list-disc">
-                          {redactionMappings.length === 0 && <li>None</li>}
-                          {redactionMappings.map((entry) => (
-                            <li key={entry.placeholder}>
-                              {entry.placeholder} →{' '}
-                              <code>{entry.original}</code>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-                  </DialogContent>
-                </DialogBody>
-              </DialogSurface>
-            </Dialog>
-            <div className="text-xs text-gray-500 mt-1">
-              {sensitivityDisplay || 'No sensitive entities detected'}
-            </div>
           </div>
         )}
         <MessageToolbar message={message} isReady={isReady} />

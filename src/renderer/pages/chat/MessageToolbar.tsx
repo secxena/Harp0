@@ -5,6 +5,12 @@ import {
   PopoverSurface,
   PopoverTrigger,
   Tooltip,
+  Dialog,
+  DialogTrigger,
+  DialogSurface,
+  DialogBody,
+  DialogTitle,
+  DialogContent,
 } from '@fluentui/react-components';
 import {
   bundleIcon,
@@ -16,9 +22,11 @@ import {
   Copy16Filled,
   ArrowSync16Filled,
   ArrowSync16Regular,
+  ShieldLock24Regular,
+  Dismiss24Regular,
 } from '@fluentui/react-icons';
 import eventBus from 'utils/bus';
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import useBookmarkStore from 'stores/useBookmarkStore';
 import useChatStore from 'stores/useChatStore';
@@ -53,6 +61,29 @@ export default function MessageToolbar({
   const deleteBookmark = useBookmarkStore((state) => state.deleteBookmark);
   const { notifySuccess } = useToast();
   const bus = useRef(eventBus);
+  const { privacy } = message;
+
+  const sensitivityDisplay = useMemo(() => {
+    if (!privacy?.detection) {
+      return null;
+    }
+    return `${Math.round((privacy.detection.sensitivity || 0) * 100)}% sensitivity`;
+  }, [privacy]);
+
+  const topPrivacyEntities = useMemo(() => {
+    if (!privacy?.detection?.entities) {
+      return [];
+    }
+    return privacy.detection.entities.slice(0, 5);
+  }, [privacy]);
+
+  const redactionMappings = useMemo(() => {
+    return privacy?.redaction?.mapping || [];
+  }, [privacy]);
+
+  const allowedProviders = useMemo(() => {
+    return privacy?.policy?.allowedProviders || [];
+  }, [privacy]);
 
   /**
    * Creates a bookmark from the current message and updates the message with the bookmark ID.
@@ -173,6 +204,84 @@ export default function MessageToolbar({
               </div>
             </PopoverSurface>
           </Popover>
+          {privacy && (
+            <div className="flex items-center gap-2">
+              <Dialog>
+                <DialogTrigger>
+                  <Button
+                    size="small"
+                    appearance="subtle"
+                    icon={<ShieldLock24Regular />}
+                  >
+                    Privacy
+                  </Button>
+                </DialogTrigger>
+                <DialogSurface>
+                  <DialogBody>
+                    <DialogTitle
+                      action={
+                        <DialogTrigger action="close">
+                          <Button
+                            appearance="subtle"
+                            aria-label="close"
+                            icon={<Dismiss24Regular />}
+                          />
+                        </DialogTrigger>
+                      }
+                    >
+                      Privacy details
+                    </DialogTitle>
+                    <DialogContent>
+                      <div className="text-sm space-y-2">
+                        <p>
+                          <strong>Provider used:</strong>{' '}
+                          {privacy.providerUsed || 'Not routed'}
+                        </p>
+                        <p>
+                          <strong>Sensitivity score:</strong>{' '}
+                          {sensitivityDisplay || 'N/A'}
+                        </p>
+                        <p>
+                          <strong>Allowed providers:</strong>{' '}
+                          {allowedProviders.length
+                            ? allowedProviders.join(', ')
+                            : 'None'}
+                        </p>
+                        <div>
+                          <strong>Detected entities:</strong>
+                          <ul className="ml-4 list-disc">
+                            {topPrivacyEntities.length === 0 && <li>None</li>}
+                            {topPrivacyEntities.map((entity) => (
+                              <li
+                                key={`${entity.type}-${entity.start}-${entity.text}`}
+                              >
+                                {entity.type}: <code>{entity.text}</code>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                        <div>
+                          <strong>Redactions:</strong>
+                          <ul className="ml-4 list-disc">
+                            {redactionMappings.length === 0 && <li>None</li>}
+                            {redactionMappings.map((entry) => (
+                              <li key={entry.placeholder}>
+                                {entry.placeholder} →{' '}
+                                <code>{entry.original}</code>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </DialogBody>
+                </DialogSurface>
+              </Dialog>
+              <Text size={200} className="hidden sm:block text-gray-500">
+                {sensitivityDisplay || 'No sensitive entities detected'}
+              </Text>
+            </div>
+          )}
         </div>
         <div className="mr-2.5">
           <div className="flex justify-start items-center gap-5">
