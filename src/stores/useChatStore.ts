@@ -28,6 +28,7 @@ import {
   IStage,
 } from 'intellichat/types';
 import { isValidTemperature } from 'intellichat/validators';
+import { PrivacyMetadata } from 'privacy/privacy-router';
 import { captureException } from '../renderer/logging';
 
 const debug = Debug('5ire:stores:useChatStore');
@@ -47,6 +48,7 @@ if (!isPlainObject(tempStage)) {
 } else {
   tempStage = pick(tempStage, Object.keys(defaultTempStage));
 }
+/* eslint-disable no-unused-vars, @typescript-eslint/no-unused-vars, no-shadow */
 export interface IChatStore {
   openFolders: string[];
   folders: Record<string, IChatFolder>;
@@ -116,6 +118,34 @@ export interface IChatStore {
   editStage: (chatId: string, stage: Partial<IStage>) => Promise<void>;
   deleteStage: (chatId: string) => void;
 }
+/* eslint-enable no-unused-vars, @typescript-eslint/no-unused-vars, no-shadow */
+
+const parsePrivacyFromMemo = (
+  memo?: string | null,
+): PrivacyMetadata | undefined => {
+  if (!memo) {
+    return undefined;
+  }
+  try {
+    const parsed = JSON.parse(memo);
+    if (parsed && typeof parsed === 'object' && parsed.privacy) {
+      return parsed.privacy as PrivacyMetadata;
+    }
+  } catch (err) {
+    debug('Failed to parse privacy memo', err);
+  }
+  return undefined;
+};
+
+const hydrateMessage = (message: IChatMessage): IChatMessage => {
+  const metadata = parsePrivacyFromMemo(message.memo);
+  if (metadata) {
+    message.privacy = metadata;
+  } else if (message.privacy) {
+    delete message.privacy;
+  }
+  return message;
+};
 
 const useChatStore = create<IChatStore>((set, get) => ({
   folders: {},
@@ -366,16 +396,17 @@ const useChatStore = create<IChatStore>((set, get) => ({
         state.chat = { ...state.chat, ...$chat };
       }),
     );
-    console.log('Edit chat', $chat);
+    debug('Edit chat', $chat);
     return $chat;
   },
   createChat: async (
-    chat: Partial<IChat>,
+    chatPayload: Partial<IChat>,
+    // eslint-disable-next-line no-unused-vars
     beforeSetCallback?: (chat: IChat) => Promise<void>,
   ) => {
     const $chat = {
       ...get().chat,
-      ...chat,
+      ...chatPayload,
       id: typeid('chat').toString(),
       createdAt: date2unix(new Date()),
     } as IChat;
@@ -388,7 +419,7 @@ const useChatStore = create<IChatStore>((set, get) => ({
       captureException(err);
     }
     let stream = 1;
-    if (!isNil(chat.stream) && !chat.stream) {
+    if (!isNil(chatPayload.stream) && !chatPayload.stream) {
       stream = 0;
     }
     const ok = await window.electron.db.run(
@@ -406,7 +437,7 @@ const useChatStore = create<IChatStore>((set, get) => ({
         stream,
         prompt,
         $chat.input,
-        $chat.folderId || null,
+        $chat.folderId || chatPayload.folderId || null,
         $chat.createdAt,
       ],
     );
@@ -599,6 +630,7 @@ const useChatStore = create<IChatStore>((set, get) => ({
       ...message,
       createdAt: date2unix(new Date()),
     } as IChatMessage;
+    hydrateMessage(msg);
     const columns = Object.keys(msg);
     await window.electron.db.run(
       `INSERT INTO messages (${columns.join(',')})
@@ -698,6 +730,7 @@ const useChatStore = create<IChatStore>((set, get) => ({
           const index = state.messages.findIndex((m) => m.id === msg.id);
           if (index !== -1) {
             state.messages[index] = { ...state.messages[index], ...msg };
+            hydrateMessage(state.messages[index]);
           }
         }),
       );
@@ -773,8 +806,9 @@ const useChatStore = create<IChatStore>((set, get) => ({
       sql,
       params,
     )) as IChatMessage[];
-    set({ messages });
-    return messages;
+    const hydratedMessages = messages.map((m) => hydrateMessage(m));
+    set({ messages: hydratedMessages });
+    return hydratedMessages;
   },
   editStage: async (chatId: string, stage: Partial<IStage>) => {
     if (chatId === TEMP_CHAT_ID) {

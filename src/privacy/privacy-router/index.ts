@@ -14,15 +14,20 @@ export interface ChatRequest {
   stream?: boolean;
 }
 
+export interface PrivacyMetadata {
+  detection: DetectionResult;
+  policy: PolicyDecision;
+  redaction: RedactionResult;
+  providerUsed?: string;
+}
+
+// eslint-disable-next-line no-unused-vars
+type ProviderInvoker = (prompt: string) => Promise<string>;
+
 export interface ChatResponseWithMeta {
   content?: string;
   error?: string;
-  metadata: {
-    detection: DetectionResult;
-    policy: PolicyDecision;
-    redaction: RedactionResult;
-    providerUsed?: string;
-  };
+  metadata: PrivacyMetadata;
 }
 
 /**
@@ -31,7 +36,7 @@ export interface ChatResponseWithMeta {
  */
 export async function runWithPrivacyPipeline(
   request: ChatRequest,
-  invokeProvider: (transformedPrompt: string) => Promise<string>,
+  invokeProvider: ProviderInvoker,
 ): Promise<ChatResponseWithMeta> {
   const detection = detectLeaks(request.prompt);
   const policy = evaluatePolicy(detection, {
@@ -67,4 +72,10 @@ export async function runWithPrivacyPipeline(
   };
 }
 
-export { detectLeaks, evaluatePolicy, redactText, defaultPolicyRules };
+export {
+  detectLeaks,
+  evaluatePolicy,
+  redactText,
+  defaultPolicyRules,
+  PrivacyMetadata,
+};

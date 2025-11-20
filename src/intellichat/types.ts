@@ -1,5 +1,6 @@
-import { IChatModelConfig, IChatProviderConfig } from 'providers/types';
 import { ContentBlock } from '@modelcontextprotocol/sdk/types.js';
+import { PrivacyMetadata } from 'privacy/privacy-router';
+import { IChatModelConfig, IChatProviderConfig } from 'providers/types';
 import { FinalContentBlock } from './mcp/ContentBlockConverter';
 
 export interface IPrompt {
@@ -48,6 +49,7 @@ export interface IChatMessage {
   isActive: boolean | 0 | 1;
   citedFiles?: string;
   citedChunks?: string;
+  privacy?: PrivacyMetadata;
 }
 
 export interface IChatResponseMessage {
@@ -67,12 +69,7 @@ export interface IChatResponseMessage {
     type?: string;
     message: string;
   };
-  privacy?: {
-    detection: any;
-    policy: any;
-    redaction: any;
-    providerUsed?: string;
-  };
+  privacy?: PrivacyMetadata;
 }
 
 export interface IMCPTool {
@@ -206,6 +203,7 @@ export type ModelGroup =
   | 'Moonshot'
   | 'Open Source';
 
+/* eslint-disable no-unused-vars, @typescript-eslint/no-unused-vars */
 export interface IChatContext {
   getActiveChat: () => IChat;
   getProvider: () => IChatProviderConfig;
@@ -218,6 +216,7 @@ export interface IChatContext {
   isStream: () => boolean;
   isReady: () => boolean;
 }
+/* eslint-enable no-unused-vars, @typescript-eslint/no-unused-vars */
 
 export interface IChatFolder {
   id: string;

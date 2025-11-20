@@ -301,6 +301,8 @@ Implementation (with Codex):
 * Identify the chat message component and extend its model to store the metadata from `ChatResponseWithMeta`.
 * Build a simple panel that reads from the message history and renders the metadata.
 
+> **Status:** Each chat message now stores leak-detection metadata (saved in `memo`) and exposes a “Privacy details” dialog inside the chat UI so we can inspect detections/redactions before building the dedicated privacy panel.
+
 ---
 
 ### 5.6 Zcash / ZK Integration
