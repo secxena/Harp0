@@ -19,6 +19,7 @@ export interface PolicyRules {
   };
   localProviders?: string[];
   defaultProviders?: string[];
+  custom_literals?: string[];
 }
 
 const defaultRules: PolicyRules = {
@@ -35,12 +36,14 @@ const defaultRules: PolicyRules = {
     EMAIL: 'redact',
     PHONE: 'redact',
     PASSWORD: 'redact',
+    CUSTOM_LITERAL: 'redact',
   },
   sensitivity_thresholds: {
     high: 0.7,
   },
   localProviders: ['Ollama', 'LMStudio', '5ire'],
   defaultProviders: [],
+  custom_literals: [],
 };
 
 /**

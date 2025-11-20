@@ -272,6 +272,8 @@ Implementation:
    * Detection of secrets → block or local only.
    * Normal prompts → allow external providers.
 
+> **Status:** Users can edit routing, thresholds, and a custom literal-redaction list via the new privacy button in the chat header; settings persist to `privacy-policy.yaml` and invalidate the runtime cache automatically.
+
 ---
 
 ### 5.4 Redaction & Mapping

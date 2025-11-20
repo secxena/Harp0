@@ -13,6 +13,7 @@ export type DetectedEntityType =
   | 'WALLET'
   | 'JWT'
   | 'PASSWORD'
+  | 'CUSTOM_LITERAL'
   | 'UNKNOWN';
 
 export type SensitivityLevel = 'low' | 'medium' | 'high';

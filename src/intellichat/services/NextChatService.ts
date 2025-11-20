@@ -22,9 +22,56 @@ import {
   evaluatePolicy,
   redactText,
 } from 'privacy/privacy-router';
+import type { DetectedEntity } from 'privacy/leak-detector';
 import { loadPolicyRules } from 'privacy/policy-engine/loader';
 
 const debug = Debug('5ire:intellichat:NextChatService');
+/* eslint-disable @typescript-eslint/no-unused-vars, no-unused-vars */
+
+function overlaps(
+  existing: DetectedEntity[],
+  start: number,
+  end: number,
+): boolean {
+  return existing.some(
+    (entity) => Math.max(entity.start, start) < Math.min(entity.end, end),
+  );
+}
+
+function buildCustomLiteralEntities(
+  text: string,
+  literals: string[],
+  existing: DetectedEntity[],
+): DetectedEntity[] {
+  const entities: DetectedEntity[] = [];
+  literals
+    .map((literal) => literal?.trim())
+    .filter((literal) => literal)
+    .forEach((literal) => {
+      let searchIndex = 0;
+      while (searchIndex < text.length) {
+        const idx = text.indexOf(literal as string, searchIndex);
+        if (idx === -1) {
+          break;
+        }
+        const start = idx;
+        const end = idx + (literal as string).length;
+        if (!overlaps(existing.concat(entities), start, end)) {
+          entities.push({
+            type: 'CUSTOM_LITERAL',
+            start,
+            end,
+            text: literal as string,
+            severity: 'high',
+            confidence: 0.95,
+            description: 'User-defined sensitive literal',
+          });
+        }
+        searchIndex = end;
+      }
+    });
+  return entities;
+}
 
 export default abstract class NextCharService {
   protected updateBuffer: string = '';
@@ -155,7 +202,7 @@ export default abstract class NextCharService {
   protected onReadingError(chunk: string) {
     try {
       const { error } = JSON.parse(chunk);
-      console.error(error);
+      debug('Reading error', error);
     } catch (err) {
       throw new Error(`Something went wrong`);
     }
@@ -314,6 +361,16 @@ export default abstract class NextCharService {
         const provider = this.context.getProvider();
         const rules = await loadPolicyRules();
         const detection = detectLeaks(basePromptMessage.content);
+        if (rules.custom_literals?.length) {
+          const literals = buildCustomLiteralEntities(
+            basePromptMessage.content,
+            rules.custom_literals,
+            detection.entities,
+          );
+          if (literals.length) {
+            detection.entities.push(...literals);
+          }
+        }
         const policy = evaluatePolicy(
           detection,
           {
@@ -583,3 +640,5 @@ export default abstract class NextCharService {
     }
   }
 }
+
+/* eslint-enable @typescript-eslint/no-unused-vars, no-unused-vars */

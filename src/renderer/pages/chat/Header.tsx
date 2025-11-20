@@ -11,6 +11,8 @@ import {
   MoreHorizontalRegular,
   FilterDismissRegular,
   FilterDismissFilled,
+  ShieldLockFilled,
+  ShieldLockRegular,
 } from '@fluentui/react-icons';
 import useAppearanceStore from 'stores/useAppearanceStore';
 import useChatStore from 'stores/useChatStore';
@@ -22,6 +24,7 @@ import { IChatFolder } from 'intellichat/types';
 import { isPersistedChat } from 'utils/util';
 import useDeleteChat from 'hooks/useDeleteChat';
 import ChatSettingsDrawer from './ChatSettingsDrawer';
+import PrivacyConfigDrawer from './PrivacyConfigDrawer';
 
 const DeleteIcon = bundleIcon(DeleteFilled, DeleteRegular);
 
@@ -33,6 +36,7 @@ const MoreHorizontalIcon = bundleIcon(
 );
 const InspectorShowIcon = bundleIcon(WindowConsoleFilled, WindowConsoleRegular);
 const InspectorHideIcon = bundleIcon(WindowConsoleRegular, WindowConsoleFilled);
+const PrivacyIcon = bundleIcon(ShieldLockFilled, ShieldLockRegular);
 
 export default function Header() {
   const { t } = useTranslation();
@@ -45,6 +49,7 @@ export default function Header() {
     (state) => state.toggleChatSidebarVisibility,
   );
   const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
+  const [privacyDrawerOpen, setPrivacyDrawerOpen] = useState<boolean>(false);
 
   const {
     delConfirmDialogOpen,
@@ -128,6 +133,16 @@ export default function Header() {
             ) : null}
           </>
         ) : null}
+        <Tooltip
+          content={t('Privacy.Settings', 'Privacy settings')}
+          relationship="label"
+        >
+          <Button
+            icon={<PrivacyIcon className="text-color-tertiary" />}
+            appearance="transparent"
+            onClick={() => setPrivacyDrawerOpen(true)}
+          />
+        </Tooltip>
         <Button
           icon={<MoreHorizontalIcon className="text-color-tertiary" />}
           appearance="transparent"
@@ -135,6 +150,10 @@ export default function Header() {
         />
       </div>
       <ChatSettingsDrawer open={drawerOpen} setOpen={setDrawerOpen} />
+      <PrivacyConfigDrawer
+        open={privacyDrawerOpen}
+        setOpen={setPrivacyDrawerOpen}
+      />
       <ConfirmDialog
         open={delConfirmDialogOpen}
         setOpen={setDelConfirmDialogOpen}

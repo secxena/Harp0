@@ -146,6 +146,8 @@ const electronHandler = {
   },
   privacy: {
     getPolicy: () => ipcRenderer.invoke('get-privacy-policy'),
+    setPolicy: (config: any) =>
+      ipcRenderer.invoke('set-privacy-policy', config),
   },
   openExternal(url: string) {
     return ipcRenderer.invoke('open-external', url);

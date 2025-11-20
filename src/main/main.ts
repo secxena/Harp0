@@ -5,6 +5,7 @@ import fs from 'node:fs';
 import path from 'path';
 import dotenv from 'dotenv';
 import fetch from 'node-fetch';
+import YAML from 'yaml';
 import {
   app,
   dialog,
@@ -94,19 +95,29 @@ function parsePrivacyPolicy(filePath: string): any | null {
       return JSON.parse(content);
     }
     if (filePath.endsWith('.yaml') || filePath.endsWith('.yml')) {
-      try {
-        // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
-        const yaml = require('yaml');
-        return yaml.parse(content);
-      } catch (err: any) {
-        logging.captureException(err);
-        return null;
-      }
+      return YAML.parse(content);
     }
   } catch (err: any) {
     logging.captureException(err);
   }
   return null;
+}
+
+function savePrivacyPolicyConfig(config: any) {
+  try {
+    const policyPath = path.join(
+      app.getPath('userData'),
+      'privacy-policy.yaml',
+    );
+    const dir = path.dirname(policyPath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    const serialized = YAML.stringify(config || {});
+    fs.writeFileSync(policyPath, serialized, 'utf8');
+  } catch (err: any) {
+    logging.captureException(err);
+  }
 }
 
 function loadPrivacyPolicyConfig(): any | null {
@@ -576,6 +587,11 @@ ipcMain.handle('get-app-version', () => {
 
 ipcMain.handle('get-privacy-policy', () => {
   return loadPrivacyPolicyConfig();
+});
+
+ipcMain.handle('set-privacy-policy', (_, config: any) => {
+  savePrivacyPolicyConfig(config);
+  return true;
 });
 
 ipcMain.handle('ingest-event', (_, data) => {
