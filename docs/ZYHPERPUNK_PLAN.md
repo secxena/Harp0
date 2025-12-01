@@ -353,9 +353,9 @@ Possible steps:
 
 **Milestone 3 – UX & Transparency**
 
-* [ ] Privacy panel in UI.
-* [ ] Per-message privacy info (what was sent where).
-* [ ] Simple config screen for policies.
+* [x] Privacy panel in UI.
+* [x] Per-message privacy info (what was sent where).
+* [x] Simple config screen for policies.
 
 **Milestone 4 – Zcash/ZK demo**
 

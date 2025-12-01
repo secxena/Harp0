@@ -1,3 +1,4 @@
+/* eslint-disable react/no-danger */
 import {
   Accordion,
   AccordionItem,
@@ -8,10 +9,11 @@ import {
 import { ArrowForwardFilled } from '@fluentui/react-icons';
 import useMarkdown from 'hooks/useMarkdown';
 import useUI from 'hooks/useUI';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import useAppearanceStore from 'stores/useAppearanceStore';
 import useInspectorStore, { ITraceMessage } from 'stores/useInspectorStore';
+import PrivacyPanel from './PrivacyPanel';
 
 export default function Sidebar({ chatId }: { chatId: string }) {
   const { t } = useTranslation();
@@ -22,6 +24,9 @@ export default function Sidebar({ chatId }: { chatId: string }) {
   const messages = useInspectorStore((state) => state.messages);
   const { clearTrace } = useInspectorStore();
   const trace = useMemo(() => messages[chatId] || [], [messages, chatId]);
+  const [activeTab, setActiveTab] = useState<'inspector' | 'privacy'>(
+    'inspector',
+  );
 
   const labelClasses: { [key: string]: string } = useMemo(() => {
     if (theme === 'dark') {
@@ -40,6 +45,46 @@ export default function Sidebar({ chatId }: { chatId: string }) {
     };
   }, [theme]);
 
+  const inspectorContent =
+    trace.length > 0 ? (
+      <Accordion multiple collapsible>
+        {trace?.map((item: ITraceMessage, idx: number) => {
+          return item.message === '' ? (
+            <div className="pl-4 mt-2" key={`${chatId}-${item.id}`}>
+              <span className="-ml-1 inline-block pt-0 py-0.5 rounded truncate text-ellipsis overflow-hidden w-52 font-bold text-gray-400 dark:text-gray-400">
+                <ArrowForwardFilled />
+                &nbsp;{item.label}
+              </span>
+            </div>
+          ) : (
+            <AccordionItem value={idx} key={`${chatId}-${item.id}`}>
+              <AccordionHeader size="small">
+                <span
+                  className={`-ml-1 px-1 inline-block pt-0 py-0.5 rounded ${labelClasses[item.label] || ''}`}
+                >
+                  {item.label}
+                </span>
+              </AccordionHeader>
+              <AccordionPanel>
+                <div className="inspector-message" style={{ marginLeft: 8 }}>
+                  {/* eslint-disable-next-line react/no-danger */}
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: render(`\`\`\`json\n${item.message}\n\`\`\``),
+                    }}
+                  />
+                </div>
+              </AccordionPanel>
+            </AccordionItem>
+          );
+        })}
+      </Accordion>
+    ) : (
+      <div className="flex flex-col justify-center items-center px-2 opacity-70">
+        <p className="tips text-xs">{t('Common.InspectorHint')}</p>
+      </div>
+    );
+
   return (
     <aside
       className={`z-20 pt-2.5 flex-shrink-0 min-w-[180px] ${
@@ -47,8 +92,23 @@ export default function Sidebar({ chatId }: { chatId: string }) {
       }  inset-y-0 top-0 flex-col duration-300 md:relative pl-2`}
     >
       <div className="flex justify-between items-center text-gray-300 dark:text-stone-600 font-bold text-lg mb-2">
-        <span> {t('Common.Inspector')}</span>
-        {trace.length > 0 && (
+        <div className="flex gap-2">
+          <Button
+            appearance={activeTab === 'inspector' ? 'primary' : 'subtle'}
+            size="small"
+            onClick={() => setActiveTab('inspector')}
+          >
+            {t('Common.Inspector')}
+          </Button>
+          <Button
+            appearance={activeTab === 'privacy' ? 'primary' : 'subtle'}
+            size="small"
+            onClick={() => setActiveTab('privacy')}
+          >
+            {t('Privacy.Tab', 'Privacy')}
+          </Button>
+        </div>
+        {activeTab === 'inspector' && trace.length > 0 && (
           <Button
             appearance="transparent"
             className="opacity-60"
@@ -65,47 +125,13 @@ export default function Sidebar({ chatId }: { chatId: string }) {
           height: heightStyle(),
         }}
       >
-        {trace.length > 0 ? (
-          <Accordion multiple collapsible>
-            {trace?.map((item: ITraceMessage, idx: number) => {
-              return item.message === '' ? (
-                <div className="pl-4 mt-2" key={`${chatId}-${item.id}`}>
-                  <span className="-ml-1 inline-block pt-0 py-0.5 rounded truncate text-ellipsis overflow-hidden w-52 font-bold text-gray-400 dark:text-gray-400">
-                    <ArrowForwardFilled />
-                    &nbsp;{item.label}
-                  </span>
-                </div>
-              ) : (
-                <AccordionItem value={idx} key={`${chatId}-${item.id}`}>
-                  <AccordionHeader size="small">
-                    <span
-                      className={`-ml-1 px-1 inline-block pt-0 py-0.5 rounded ${labelClasses[item.label] || ''}`}
-                    >
-                      {item.label}
-                    </span>
-                  </AccordionHeader>
-                  <AccordionPanel>
-                    <div
-                      className="inspector-message"
-                      style={{ marginLeft: 8 }}
-                    >
-                      <div
-                        dangerouslySetInnerHTML={{
-                          __html: render(`\`\`\`json\n${item.message}\n\`\`\``),
-                        }}
-                      />
-                    </div>
-                  </AccordionPanel>
-                </AccordionItem>
-              );
-            })}
-          </Accordion>
+        {activeTab === 'inspector' ? (
+          inspectorContent
         ) : (
-          <div className="flex flex-col justify-center items-center px-2 opacity-70">
-            <p className="tips text-xs">{t('Common.InspectorHint')}</p>
-          </div>
+          <PrivacyPanel chatId={chatId} />
         )}
       </div>
     </aside>
   );
 }
+/* eslint-enable react/no-danger */
