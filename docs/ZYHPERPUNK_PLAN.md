@@ -346,10 +346,10 @@ Possible steps:
 
 **Milestone 2 – Privacy Router MVP**
 
-* [ ] Leak-detection module with regex rules.
-* [ ] Policy engine with YAML-configured rules.
-* [ ] Redaction module wired into provider calls.
-* [ ] Basic audit metadata returned in responses.
+* [x] Leak-detection module with regex rules.
+* [x] Policy engine with YAML-configured rules.
+* [x] Redaction module wired into provider calls.
+* [x] Basic audit metadata returned in responses.
 
 **Milestone 3 – UX & Transparency**
 
