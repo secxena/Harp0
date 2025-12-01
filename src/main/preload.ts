@@ -149,6 +149,12 @@ const electronHandler = {
     setPolicy: (config: any) =>
       ipcRenderer.invoke('set-privacy-policy', config),
   },
+  zcash: {
+    getBalance: (address: string) =>
+      ipcRenderer.invoke('zcash-get-balance', address),
+    generateProof: (payload: { address: string; threshold: number }) =>
+      ipcRenderer.invoke('zcash-generate-proof', payload),
+  },
   openExternal(url: string) {
     return ipcRenderer.invoke('open-external', url);
   },

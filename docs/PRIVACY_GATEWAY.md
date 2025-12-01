@@ -364,8 +364,8 @@ Possible steps:
 
 **Milestone 4 – Zcash/ZK demo**
 
-* [ ] Minimal Zcash integration (testnet balance or transaction display).
-* [ ] Simple zk proof demo wired into MCP/tooling or UI.
+* [x] Minimal Zcash integration (mock testnet balance view in privacy settings).
+* [x] Simple zk proof demo wired into UI (address threshold proof stub).
 
 **Milestone 5 – Polish & Docs**
 

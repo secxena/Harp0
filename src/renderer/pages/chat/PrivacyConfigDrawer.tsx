@@ -46,6 +46,11 @@ export default function PrivacyConfigDrawer({
   const [sensitivityHigh, setSensitivityHigh] = useState<string>('0.7');
   const [rawPolicy, setRawPolicy] = useState<any>({});
   const [disabledEntities, setDisabledEntities] = useState<string[]>([]);
+  const [zkAddress, setZkAddress] = useState('');
+  const [zkThreshold, setZkThreshold] = useState('1');
+  const [zkBalance, setZkBalance] = useState<number | null>(null);
+  const [zkProof, setZkProof] = useState<any | null>(null);
+  const [zkLoading, setZkLoading] = useState(false);
 
   useEffect(() => {
     if (!open) {
@@ -88,6 +93,58 @@ export default function PrivacyConfigDrawer({
       }
       return prev.filter((item) => item !== type);
     });
+  };
+
+  const fetchZcashBalance = async () => {
+    if (!zkAddress) {
+      notifyError(t('Privacy.EnterAddress', 'Enter an address first.'));
+      return;
+    }
+    try {
+      setZkLoading(true);
+      const result = await window.electron.zcash.getBalance(zkAddress);
+      setZkBalance(result.balance);
+      setZkProof(null);
+      notifySuccess(
+        t('Privacy.BalanceFetched', 'Fetched mock balance successfully.'),
+      );
+    } catch (error: any) {
+      notifyError(error?.message || 'Failed to fetch balance');
+    } finally {
+      setZkLoading(false);
+    }
+  };
+
+  const generateZcashProof = async () => {
+    if (!zkAddress) {
+      notifyError(t('Privacy.EnterAddress', 'Enter an address first.'));
+      return;
+    }
+    try {
+      setZkLoading(true);
+      const proof = await window.electron.zcash.generateProof({
+        address: zkAddress,
+        threshold: Number(zkThreshold) || 0,
+      });
+      setZkProof(proof);
+      window.electron.ingestEvent([
+        { app: 'zk-proof' },
+        { valid: proof.valid },
+        { balance: proof.balance },
+      ]);
+      notifySuccess(
+        proof.valid
+          ? t('Privacy.ProofValid', 'Proof generated (balance ≥ threshold)')
+          : t(
+              'Privacy.ProofInvalid',
+              'Proof generated but balance < threshold',
+            ),
+      );
+    } catch (error: any) {
+      notifyError(error?.message || 'Failed to generate proof');
+    } finally {
+      setZkLoading(false);
+    }
   };
 
   const onSave = async () => {
@@ -219,6 +276,64 @@ export default function PrivacyConfigDrawer({
             )}
           />
         </Field>
+        <Divider>{t('Privacy.ZcashDemo', 'Zcash proof demo')}</Divider>
+        <Field label={t('Privacy.Address', 'Zcash address')}>
+          <Input
+            placeholder="zs1..."
+            value={zkAddress}
+            onChange={(_, data) => setZkAddress(data.value)}
+          />
+        </Field>
+        <Field label={t('Privacy.Threshold', 'Threshold (ZEC)')}>
+          <Input
+            type="number"
+            min={0}
+            step={0.1}
+            value={zkThreshold}
+            onChange={(_, data) => setZkThreshold(data.value)}
+          />
+        </Field>
+        <div className="flex gap-2">
+          <Button
+            appearance="subtle"
+            onClick={fetchZcashBalance}
+            loading={zkLoading}
+          >
+            {t('Privacy.FetchBalance', 'Fetch balance')}
+          </Button>
+          <Button
+            appearance="primary"
+            onClick={generateZcashProof}
+            loading={zkLoading}
+          >
+            {t('Privacy.GenerateProof', 'Generate proof')}
+          </Button>
+        </div>
+        {zkBalance !== null && (
+          <div className="text-xs text-gray-600 dark:text-gray-300">
+            {t('Privacy.CurrentBalance', 'Mock balance')}: {zkBalance} ZEC
+          </div>
+        )}
+        {zkProof && (
+          <div className="rounded border border-gray-200 dark:border-gray-700 p-2 text-xs">
+            <div className="font-semibold">
+              {zkProof.valid
+                ? t('Privacy.ProofValidLabel', 'Proof valid')
+                : t('Privacy.ProofInvalidLabel', 'Proof invalid')}
+            </div>
+            <div>
+              {t('Privacy.BalanceLabel', 'Balance')}: {zkProof.balance} ZEC
+            </div>
+            <div>
+              {t('Privacy.ThresholdLabel', 'Threshold')}: {zkProof.threshold}{' '}
+              ZEC
+            </div>
+            <div className="break-all">
+              {t('Privacy.Commitment', 'Commitment')}:{' '}
+              {zkProof.addressCommitment}
+            </div>
+          </div>
+        )}
         <div className="flex justify-end gap-2 mt-4">
           <Button appearance="subtle" onClick={() => setOpen(false)}>
             {t('Common.Cancel')}

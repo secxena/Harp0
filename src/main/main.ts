@@ -142,6 +142,31 @@ function loadPrivacyPolicyConfig(): any | null {
   return null;
 }
 
+function computeMockZcashBalance(address: string): number {
+  const fallback =
+    address && address.trim().length > 0 ? address.trim() : 'default-address';
+  const hash = crypto.createHash('sha256').update(fallback).digest('hex');
+  const value = parseInt(hash.slice(0, 8), 16);
+  // map to pseudo balance between 0 and 25
+  return Math.round(((value % 250000) / 10000) * 1000) / 1000;
+}
+
+function createMockZcashProof(address: string, threshold: number) {
+  const balance = computeMockZcashBalance(address);
+  const valid = balance >= threshold;
+  return {
+    proofId: crypto.randomUUID(),
+    addressCommitment: crypto
+      .createHash('sha256')
+      .update(`${address}:${threshold}`)
+      .digest('hex'),
+    balance,
+    threshold,
+    valid,
+    timestamp: Date.now(),
+  };
+}
+
 class AppUpdater {
   constructor() {
     autoUpdater.forceDevUpdateConfig = true;
@@ -593,6 +618,24 @@ ipcMain.handle('set-privacy-policy', (_, config: any) => {
   savePrivacyPolicyConfig(config);
   return true;
 });
+
+ipcMain.handle('zcash-get-balance', (_, address: string) => {
+  const balance = computeMockZcashBalance(address);
+  return {
+    address,
+    balance,
+    currency: 'ZEC',
+    source: 'mock-testnet',
+  };
+});
+
+ipcMain.handle(
+  'zcash-generate-proof',
+  (_, payload: { address: string; threshold: number }) => {
+    const { address, threshold } = payload;
+    return createMockZcashProof(address, Number(threshold) || 0);
+  },
+);
 
 ipcMain.handle('ingest-event', (_, data) => {
   axiom.ingest(data);
