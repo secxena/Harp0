@@ -7,8 +7,6 @@ HARP0 is our Zypherpunk x 5ire fork for the Zcash Privacy Hackathon. We turned t
 * **Privacy drawer & panel** – live configuration for providers, detectors, and custom literals plus a sidebar dashboard summarising recent detections.
 * **Zcash/ZK demo** – mock testnet balances and threshold proofs (balance ≥ X) surfaced directly in the UI for judging.
 
-![HARP0 screenshot](docs/assets/privacy-panel.png)
-
 > This repository already contains the privacy features described below. Follow the quick-start instructions to build or run the desktop app.
 
 ---
