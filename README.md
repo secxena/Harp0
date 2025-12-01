@@ -1,130 +1,139 @@
-<div align="center">
-  <a href="https://github.com/nanbingxyz/5ire">
-    <img src="https://5ire.app/logo.png" alt="Logo" width="120">
-  </a>
-  <br />
-  <span>(pronounced "fai-er")</span>
-   <h1>A Sleek AI Assistant & MCP Client</h1>
-   <div>
-    <a href="https://modelcontextprotocol.io/clients" target="_blank"><img src="https://badge.mcpx.dev/?type=client" /></a>
-    <img src="https://badge.mcpx.dev/?type=client&features=tools,prompts" />
-    <a href="https://discord.gg/ADfBTGd5jd"><img src="https://dcbadge.limes.pink/api/server/ADfBTGd5jd?style=flat&theme=clean" alt="5ire discord server"/></a>
-    <img src="https://img.shields.io/badge/price-free-brightgreen.svg"/>
-    <a href="https://linkedin.com/in/nanbing" target="_blank"><img src="https://custom-icon-badges.demolab.com/badge/LinkedIn-0A66C2?logo=linkedin-white&logoColor=fff" alt="follow on LinkedIn"></a>
-    <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg"/>
-     <a href="https://github.com/nanbingxyz/5ire/graphs/commit-activity" target="_blank">
-        <img alt="Commits last month" src="https://img.shields.io/github/commit-activity/m/nanbingxyz/5ire?labelColor=%20%2332b583&color=%20%2312b76a"></a>
-     <a href="https://github.com/nanbingxyz/5ire/issues" target="_blank">
-        <img alt="Issues closed" src="https://img.shields.io/github/issues-search?query=repo%3Ananbingxyz%2F5ire%20is%3Aclosed&label=issues%20closed&labelColor=%20%237d89b0&color=%20%235d6b98"></a>
-     <a href="https://mseep.ai/app/92bbc79d-4b4d-4707-8d43-2d3d8ebb4fa8" target="_blank"><img src="https://mseep.ai/badge.svg" alt="Verified on MseeP"/></a>
-  </div>
-   <br />
-  <img src="https://github.com/user-attachments/assets/e622e1da-09b9-4212-b71c-ad9d39bf3cd5" width="100%"/>
-  <br />
-  <p>
-    <br />
-    <div style="display:flex;justify-content:space-around;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:15px;">
-    <span style="font-size:12px;">OpenAI</span>
-    <span style="font-size:12px;">/ Azure</span>
-    <span style="font-size:12px;">/ Anthropic</span>
-    <span style="font-size:12px;">/ Google</span>
-    <span style="font-size:12px;">/ Mistral</span>
-    <span style="font-size:12px;">/ Doubao</span>
-    <span style="font-size:12px;">/ Grok</span>
-    <span style="font-size:12px;">/ DeepSeek</span>
-    <span style="font-size:12px;">/ Ollama</span>
-  </div>
-    <br />
-    <a href="https://x.com/intent/follow?screen_name=1ronben">Twitter</a>
-    ·
-    <a href="https://github.com/nanbingxyz/5ire/releases/latest">Releases</a>
-  </p>
-  <div><a href="https://buymeacoffee.com/ironben"><img src="https://github.com/user-attachments/assets/2265e2d6-2a17-4a48-b779-52a925261135" style="width:200px"/></a></div>
-   <br />
-<video src="https://github.com/user-attachments/assets/741b23d3-31df-4749-bde4-103e2d415953.mp4"></video>
-</div>
-<br />
+# HARP0 – Privacy-Preserving AI Gateway
 
-### Before to activating tools feature, ensure the following components are installed:
+HARP0 is our Zypherpunk x 5ire fork for the Zcash Privacy Hackathon. We turned the original 5ire desktop assistant into a privacy firewall for LLM workflows:
 
-- Python
-- Node.js
-- uv (Python package manager)
+* **Privacy pipeline** – leak detection, redaction, and policy routing run before any provider call.
+* **Per‑message transparency** – every reply carries metadata showing what was redacted and where it was routed.
+* **Privacy drawer & panel** – live configuration for providers, detectors, and custom literals plus a sidebar dashboard summarising recent detections.
+* **Zcash/ZK demo** – mock testnet balances and threshold proofs (balance ≥ X) surfaced directly in the UI for judging.
 
-These components are required as they constitute the runtime environment for the MCP Server. If you don't anticipate using the tools feature immediately, you may choose to skip this installation step and complete it later when the need arises.
+![HARP0 screenshot](docs/assets/privacy-panel.png)
 
-For detailed installation instructions, please see our [Installation Guide](INSTALLATION.md).
+> This repository already contains the privacy features described below. Follow the quick-start instructions to build or run the desktop app.
 
-<br/>
+---
 
-### 💪 Getting involved
+## Table of contents
 
-If you want to contribute code to 5ire or develop your own apps based on 5ire, start with the [Development Setup Guide](DEVELOPMENT.md).
+1. [Features](#features)
+2. [Quick start](#quick-start)
+3. [Development](#development)
+4. [Privacy controls](#privacy-controls)
+5. [Zcash proof demo](#zcash-proof-demo)
+6. [Project structure](#project-structure)
 
-Visit [Wiki](https://deepwiki.com/nanbingxyz/5ire) for more details.
+---
 
-**🚀 To integrate 5ire’s one-click server installation into your website, see the** [One-Click Server Installation Integration Guide](https://github.com/nanbingxyz/5ire/wiki/One%E2%80%90Click-Server-Installation-Integration-Guide).
+## Features
 
-<br/>
+### Privacy pipeline
+* Regex-based leak detector with severity scoring (emails, API keys, wallets, credit cards, etc.)
+* Policy engine chooses local vs. remote providers, blocks requests, and dictates redaction rules.
+* Redaction mapping is preserved locally so UI can restore the original text for the user.
 
-### 💬 Community
+### Privacy UI
+* **Message toolbar** shows per-message privacy status and opens the detector detail dialog.
+* **Privacy config drawer** (shield icon in chat header) lets users:
+  - Edit default/local provider lists and sensitivity thresholds.
+  - Register custom strings that must always be redacted.
+  - Enable/disable every detector category via checkboxes.
+* **Sidebar privacy panel** summarises total messages inspected, high-sensitivity counts, redactions, top entity types, and recent events.
 
-**[Join the Discord](https://discord.gg/ADfBTGd5jd)**,  By joining, you’ll get:
+### Zcash/ZK demo
+* Mock testnet balance lookup based on a deterministic hash of the address.
+* Threshold proof generator (proof shows commitment, balance, threshold, validity) to illustrate future ZK integrations.
 
-- Faster responses to your questions and issues
-- Direct input on new features and improvements
-- A place to share ideas, tips, and feedback with other 5ire users
-- Opportunities to co-build and shape the future of 5ire together
+### MCP + multi-provider support
+* Everything from upstream 5ire remains: multi-provider chat interface (OpenAI, Anthropic, Google, Ollama, etc.), MCP tools, knowledge base, bookmarks, prompt library, analytics, and one-click packaging.
 
-<br/>
+---
 
-# Features
+## Quick start
 
-## ⚒️ Support Tools via MCP Servers
+> Building requires Node.js 18+ and npm. For MCP tooling you’ll also need Python + uv (see [INSTALLATION.md](INSTALLATION.md)).
 
-MCP is an open protocol that standardizes how applications provide context to LLMs. Think of MCP like a USB-C port for AI applications. Just as USB-C provides a standardized way to connect your devices to various peripherals and accessories, MCP provides a standardized way to connect AI models to different data sources and tools.
+```bash
+# install dependencies
+npm install
 
-With tools, you can access the file system, obtain system information, interact with databases, access remote data, and more, rather than just having a simple conversation.
+# run in development mode
+npm start
 
-https://github.com/user-attachments/assets/5aa98f2b-c26d-435e-8196-73fa414066eb
+# package desktop app
+npm run package
+```
 
-We have created an open [marketplace for MCP Servers](https://github.com/nanbingxyz/mcpsvr). it empowers users to discover exceptional tools while offering a streamlined process for sharing their own MCP server creations.
+Environment variables for providers, Axiom telemetry, or MCP servers follow the upstream 5ire instructions (see [INSTALLATION.md](INSTALLATION.md) and [DEVELOPMENT.md](DEVELOPMENT.md)).
 
-https://github.com/user-attachments/assets/be66c30e-bb29-4dfe-9f25-8d396470ed60
+---
 
-## 💡 Local Knowledge Base
+## Development
 
-We have integrated the bge-m3 as our local embedding model, which excels in multilingual vectorization. 5ire now supports parsing and vectorization of docx, xlsx, pptx, pdf, txt, and csv documents, enabling storage of these vectors to power robust Retrieval-Augmented Generation (RAG) capabilities locally.
+Useful scripts:
 
-![Local Knowledge Base Screenshot](https://5ire.app/knowledge.png)
+```bash
+npm run lint        # eslint + prettier
+npm run test        # jest (ts-jest)
+npm run build:main  # build electron main process
+npm run build:renderer
+npm run start:main
+npm run start:renderer
+```
 
-## 📈 Usage Analytics
+The project uses Electron + React (Electron React Boilerplate). Source lives in `src/` with the usual separation:
 
-By keeping track of your API usage and spending, you can gain a better understanding of how much you're spending on the API and make informed decisions to optimize your use of the service.
+* `src/main` – Electron main process, privacy policy loader, mock Zcash endpoints.
+* `src/renderer` – React UI (chat, privacy drawer, sidebar).
+* `src/privacy` – leak detector, policy engine, privacy router.
+* `src/intellichat` – chat services, provider integration.
 
-![Usage Analytics Screenshot](https://5ire.app/analytics.png)
+---
 
-## ✨ Prompts Library
+## Privacy controls
 
-The prompt library provides an effective way to create and organize your own prompts. These prompts are highly versatile, thanks to their support for variables.
+1. **Privacy button (chat header)** – opens the drawer.
+   - Configure routing: default providers vs. local-only.
+   - Set sensitivity thresholds.
+   - Register custom literals for forced redaction.
+   - Toggle any detector category via checkboxes.
+2. **Message toolbar** – shows privacy status for individual replies; click to view detections/redactions.
+3. **Sidebar panel** – switch to the “Privacy” tab to see aggregate analytics per chat.
 
-![Prompts Library Screenshot](https://5ire.app/prompts.png)
+Configuration is saved to `privacy-policy.yaml` in your user data directory (e.g., `~/Library/Application Support/5ire/`). Restart the app if you edit the file manually; changes via the drawer take effect immediately.
 
-## 🔖 Bookmarks
+---
 
-You can bookmark each conversation, and even if the original messages are deleted, the saved bookmarked content remains unaffected.
-![Bookmarks Screenshot](https://5ire.app/bookmarks.png)
+## Zcash proof demo
 
-## 🔍 Quick Search
+Inside the privacy drawer you’ll find the **Zcash demo** section:
 
-You can perform keyword searches across all conversations, quickly pinpointing the information you need.
-![Search Screenshot](https://5ire.app/search.png)
+1. Enter any address (string). We hash it to produce a deterministic mock balance.
+2. Click **Fetch balance** to view the pseudo testnet balance.
+3. Set a threshold and click **Generate proof** to produce a mock commitment indicating whether the balance meets the threshold.
 
-> [!TIP]
-> Since 5ire uses native dependencies, it needs to be packaged on the corresponding platform. If it is on Mac OS, you may also need to configure APPLE_TEAM_ID, APPLE_ID, and APPLE_ID_PASS for notarization to avoid security alerts.
+The proof object is available to future MCP/ZK integrations, and we emit telemetry events via the existing Axiom pipeline.
 
-<hr/>
+---
 
-## Discover Exceptional MCP Servers
+## Project structure
 
-[MCPSvr](https://github.com/nanbingxyz/mcpsvr), a community-driven directory of MCP servers, empowers developers to discover exceptional tools while offering a streamlined process for sharing their own MCP server creations.
+```
+├── config/                     # privacy-policy examples
+├── docs/                       # hackathon plan + assets
+├── src/
+│   ├── main/                   # electron main process
+│   ├── renderer/               # React UI
+│   ├── privacy/                # leak detector, policy engine, router
+│   ├── intellichat/            # chat services/providers
+│   └── vendors/axiom.ts        # telemetry wrapper
+├── test/privacy                # leak detector jest tests
+├── INSTALLATION.md             # detailed install guide
+├── DEVELOPMENT.md              # development environment guide
+└── README.md                   # (this file)
+```
+
+---
+
+## License
+
+HARP0 inherits the 5ire license (Modified Apache-2.0). See [LICENSE](LICENSE).
